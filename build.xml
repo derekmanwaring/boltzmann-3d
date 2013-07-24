@@ -1,0 +1,104 @@
+
+<project name="Boltzmann 3D" default="dist" basedir=".">
+
+	<!-- PROPERTIES -->
+	<!-- ********** -->	
+	
+	<!-- Directory containing application source code -->
+	<property name="src" location="src"/>
+	
+	<!-- Directory containing Java libraries -->
+	<property name="lib" location="lib"/>
+	
+	<!-- Directory where the Java compiler puts .class files -->
+	<property name="bin" location="bin"/>
+	
+	<!-- Directory containing distribution files -->
+	<property name="dist" location="dist"/>
+
+	<property name="boltz-jar" location="${dist}/Boltzmann3D.jar"/>
+		
+	<property name="util-src" location="distrib-utils/src"/>
+	<property name="util-bin" location="distrib-utils/bin"/>
+
+	<!-- CLASS PATHS -->
+	<!-- *********** -->
+	<path id="lib-classpath">
+		<fileset dir="${lib}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+	
+	<path id="all-classpath">
+		<path refid="lib-classpath"/>
+		<pathelement location="${bin}"/>
+	</path>
+	
+	<path id="util-classpath">
+		<pathelement location="${util-bin}"/>
+	</path>
+
+	<!-- TARGETS -->
+	<!-- ******* -->
+	<target name="init" description="create build directories">
+		<tstamp/>
+		<mkdir dir="${bin}"/>
+		<mkdir dir="${dist}"/>
+	</target>
+
+	<target name="clean" description="delete build files and directories">
+		<delete dir="${bin}"/>
+		<delete dir="${dist}"/>
+		<delete dir="${util-bin}"/>
+	</target>
+
+	<target name="compile" depends="init" description="compile the source code">
+		<javac srcdir="${src}" 
+				target="1.6"
+				classpathref="lib-classpath" 
+				destdir="${bin}" 
+				debug="false" 
+				excludes="edu/byu/chem/boltzmann/model/statistics/WallPressure.java,edu/byu/chem/boltzmann/model/statistics/VirialPressure.java, edu/byu/chem/boltzmann/modules/idealgas*/**"
+				includeantruntime="false" />
+        <copy todir="${bin}">
+            <fileset dir="${src}" excludes="**/*.form,**/*.java" includes="**"/>
+        </copy>
+	</target>
+	
+	<target name="init-utils" description="create build directories">
+		<tstamp/>
+		<mkdir dir="${util-bin}"/>
+		<mkdir dir="${dist}"/>
+	</target>
+	
+	<target name="compile-utils" depends="init-utils" description="compile the source code for the distribution utilities">
+		<javac srcdir="${util-src}" 
+				destdir="${util-bin}" 
+				debug="false"
+				excludes="edu/byu/chem/boltzmann/model/statistics/WallPressure.java,edu/byu/chem/boltzmann/model/statistics/VirialPressure.java, edu/byu/chem/boltzmann/modules/idealgas*/**"
+				includeantruntime="false" />
+	</target>
+	
+	<target name="run" depends="compile" description="run the full Boltzmann application">
+		<!-- If windows, libpath will be set first here. (It will not be overwritten) -->
+	    <condition property="libpath" value="lwjgl-bin/windows">
+			<os family="windows"/>
+		</condition>
+		<property name="libpath" value="lwjgl-bin/linux:lwjgl-bin/macosx"/>
+		<java classname="edu.byu.chem.boltzmann.fullapplication.Main" fork="yes">
+			<classpath>
+				<path refid="all-classpath"/>
+			</classpath>
+			<jvmarg value="-Djava.library.path=${libpath}"/>
+			<assertions>
+				<enable/>
+			</assertions>
+		</java>
+	</target>
+		
+	<target name="jar" depends="compile" description="create jar file containing all compiled Boltzmann classes">
+		<jar jarfile="${dist}/Boltzmann3D.jar" basedir="${bin}">
+		</jar>
+	</target>
+	
+</project>

@@ -1,0 +1,347 @@
+/*
+ * Boltzmann 3D, a kinetic theory demonstrator
+ * Copyright (C) 2013 Dr. Randall B. Shirts
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package edu.byu.chem.boltzmann.modules.idealgasgraph.view;
+
+import edu.byu.chem.boltzmann.controller.ErrorHandler;
+import edu.byu.chem.boltzmann.model.physics.FrameInfo;
+import edu.byu.chem.boltzmann.model.statistics.InstantaneousSpeed;
+import edu.byu.chem.boltzmann.model.statistics.StatUtils;
+import edu.byu.chem.boltzmann.model.statistics.StatisticCalculation;
+import edu.byu.chem.boltzmann.model.statistics.parents.SingleAverageStatisticOld;
+import edu.byu.chem.boltzmann.model.statistics.parents.StatisticOld;
+import edu.byu.chem.boltzmann.model.statistics.parents.WeightedValueStatistic;
+import edu.byu.chem.boltzmann.model.statistics.plots.PlotUtils.PlotType;
+import edu.byu.chem.boltzmann.utils.Units;
+import edu.byu.chem.boltzmann.utils.Units.Time;
+import edu.byu.chem.boltzmann.utils.data.ParticleType;
+import edu.byu.chem.boltzmann.utils.data.SimulationInfo;
+import edu.byu.chem.boltzmann.view.maingui.MainGuiController;
+import edu.byu.chem.boltzmann.view.maingui.MainGuiView;
+import edu.byu.chem.boltzmann.view.maingui.components.GLPanel;
+import edu.byu.chem.boltzmann.view.maingui.components.PlayPauseButton;
+import edu.byu.chem.boltzmann.view.maingui.components.StatPanel;
+import edu.byu.chem.boltzmann.view.maingui.components.StatisticReadoutSingle;
+import edu.byu.chem.boltzmann.view.maingui.components.speedspinner.SpeedSpinner;
+import edu.byu.chem.boltzmann.view.maingui.components.textfields.UnitReadout;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+
+import java.util.*;
+import javax.swing.BorderFactory;
+import javax.swing.SwingUtilities;
+
+/**
+ *
+ * @author Joshua Olson
+ * 9 May 2012
+ */
+public class IdealGasGraphView extends javax.swing.JPanel implements MainGuiView {
+
+    private MainGuiController controller;
+    
+    private SimulationInfo simInfo;
+    
+    final private StatPanel plotPanel;
+    private PlotType currentPlotType = PlotType.HISTOGRAM;
+    
+    private final GLPanel glPanel = new GLPanel(this);
+    
+    private final IdealGasGraphSimSettings simSettingsView = new IdealGasGraphSimSettings();
+
+    private final SpeedSpinner speedSpinner = new SpeedSpinner();
+    private final PlayPauseButton playButton = new PlayPauseButton(false);
+    private final UnitReadout<Time> txtFldSimTime = new UnitReadout<Time>(0.0, Time.SECOND);
+    
+    private Map<Class<? extends StatisticOld>, StatisticReadoutSingle> singleReadouts = 
+            new HashMap<Class<? extends StatisticOld>, StatisticReadoutSingle>();
+    
+    private static final Comparator<Object> TO_STRING_COMPARATOR = new Comparator<Object>() {
+        @Override
+        public int compare(Object o1, Object o2) {
+            int returnVal =  o1.toString().compareTo(o2.toString());
+            o1.toString();
+            if (returnVal == 0) {
+                //Only say the two are equal if they're equal on their terms. Otherwise the order does
+                //not matter, but we say one's ahead of the other so it still is added to the set.
+                return o1.equals(o2) ? 0 : 1;
+            } else {
+                return returnVal;
+            }
+        }
+    };
+    
+    /** Creates new form Template */
+    public IdealGasGraphView() {
+        initComponents();
+        pnlStats.add(simSettingsView, 4);    
+        
+        pnlControls.add(txtFldSimTime, 0);
+        pnlControls.add(playButton, 1);
+        pnlControls.add(speedSpinner, 3);
+        
+        plotPanel = new StatPanel();
+        plotPanel.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                //pnlPlotHolderMouseClicked(evt);
+            }
+        });
+        
+        pnlPlotHolder.add(plotPanel);
+
+        glPanel.setBorder(BorderFactory.createMatteBorder(5,
+                        5, 5, 5, glPanel.getDivColor()));
+
+        glPanel.setPreferredSize(pnlArenaHolder.getSize());
+        pnlArenaHolder.add(glPanel, "Center");
+    }
+
+    /** This method is called from within the constructor to
+     * initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        pnlArenaHolder = new javax.swing.JPanel();
+        pnlControls = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        pnlStats = new javax.swing.JPanel();
+        pnlPlotHolder = new javax.swing.JPanel();
+        pnlStatHeader = new javax.swing.JPanel();
+        pnlChkBox = new javax.swing.JPanel();
+        chkBoxCumulative = new javax.swing.JCheckBox();
+        jSeparator1 = new javax.swing.JSeparator();
+        pnlExpandToFill = new javax.swing.JPanel();
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 274, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 100, Short.MAX_VALUE)
+        );
+
+        pnlArenaHolder.setMaximumSize(new java.awt.Dimension(3000, 3000));
+        pnlArenaHolder.setMinimumSize(new java.awt.Dimension(1, 1));
+        pnlArenaHolder.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 0, 0));
+
+        pnlControls.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 3));
+
+        jLabel3.setText("Speed:");
+        pnlControls.add(jLabel3);
+
+        pnlStats.setLayout(new javax.swing.BoxLayout(pnlStats, javax.swing.BoxLayout.PAGE_AXIS));
+
+        pnlPlotHolder.setPreferredSize(new java.awt.Dimension(290, 222));
+        pnlPlotHolder.setLayout(new javax.swing.BoxLayout(pnlPlotHolder, javax.swing.BoxLayout.LINE_AXIS));
+        pnlStats.add(pnlPlotHolder);
+
+        pnlStatHeader.setMaximumSize(null);
+        pnlStatHeader.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.RIGHT, 5, 0));
+        pnlStats.add(pnlStatHeader);
+
+        chkBoxCumulative.setText("Cumulative Average");
+        pnlChkBox.add(chkBoxCumulative);
+
+        pnlStats.add(pnlChkBox);
+
+        jSeparator1.setPreferredSize(new java.awt.Dimension(500, 5));
+        pnlStats.add(jSeparator1);
+
+        pnlExpandToFill.setLayout(new java.awt.CardLayout());
+        pnlStats.add(pnlExpandToFill);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(pnlStats, javax.swing.GroupLayout.PREFERRED_SIZE, 274, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(pnlControls, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(pnlArenaHolder, javax.swing.GroupLayout.DEFAULT_SIZE, 510, Short.MAX_VALUE)))
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addComponent(pnlArenaHolder, javax.swing.GroupLayout.PREFERRED_SIZE, 530, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(pnlControls, javax.swing.GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
+            .addComponent(pnlStats, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox chkBoxCumulative;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JPanel pnlArenaHolder;
+    private javax.swing.JPanel pnlChkBox;
+    private javax.swing.JPanel pnlControls;
+    private javax.swing.JPanel pnlExpandToFill;
+    private javax.swing.JPanel pnlPlotHolder;
+    private javax.swing.JPanel pnlStatHeader;
+    private javax.swing.JPanel pnlStats;
+    // End of variables declaration//GEN-END:variables
+
+    private void rescaleArena() {
+        
+        int newArenaHeight = pnlArenaHolder.getHeight();
+        int newArenaWidth = pnlArenaHolder.getWidth();
+        glPanel.rescaleArena(newArenaWidth, newArenaHeight);
+    }
+    
+    @Override
+    public void attachController(MainGuiController controller) {        
+        controller.attachSpeedSpinner(speedSpinner);
+        controller.attachPlayPauseButton(playButton);
+        this.controller = controller;
+    }
+
+    private Set<ParticleType> singleType;
+    
+    /*private void pnlPlotHolderMouseClicked(java.awt.event.MouseEvent evt) {
+        if (evt.getButton() == java.awt.event.MouseEvent.BUTTON3) {
+            Statistic currentPlotStat = getSelectedStatistic();
+            
+            if (currentPlotStat instanceof WeightedValueStatistic) {
+                mnuPlotLimits.show(plotPanel, evt.getX(), evt.getY());
+            }
+        }    
+    }*/
+    
+    @Override
+    public void setSimulationInfo(SimulationInfo simulationInfo) {
+        this.simInfo = simulationInfo;
+        glPanel.setSimulationInfo(simulationInfo);
+        singleType = new HashSet<ParticleType>(simInfo.getParticleTypes());
+
+        createStatisticReadouts();
+
+        StatisticReadoutSingle.alignTextBoxes(pnlStats.getWidth(), singleReadouts.values());
+        
+        rescaleArena();
+        revalidate();
+    }
+    
+    private void createStatisticReadouts() {
+        singleReadouts = new HashMap<Class<? extends StatisticOld>, StatisticReadoutSingle>();
+
+        StatisticOld statistic = controller.getStatistic(singleType, InstantaneousSpeed.class);
+        if (!singleReadouts.containsKey(statistic.getClass())) {
+            StatisticReadoutSingle newReadout = new StatisticReadoutSingle(statistic,
+                    statistic.getPreferredCalcOrder().subList(0, 1).get(0));
+            newReadout.setPreferredSize(new Dimension(255, newReadout.getPreferredSize().height));
+            singleReadouts.put(statistic.getClass(), newReadout);
+        }
+
+        //Order the displayed statistics
+        SortedSet<StatisticReadoutSingle> sortedReadouts = new TreeSet<StatisticReadoutSingle>(TO_STRING_COMPARATOR);
+        sortedReadouts.addAll(singleReadouts.values());
+        pnlStatHeader.removeAll();
+        for (StatisticReadoutSingle readout: sortedReadouts) {
+            pnlStatHeader.add(readout);
+            readout.setVisible(true);
+        }
+    }
+
+    private int statRefreshCounter = 0;
+    
+    private FrameInfo currentFrame = null;
+    
+    @Override
+    public void displayFrame() {
+        glPanel.drawFrame();
+        
+        final double frameEndTime = currentFrame.endTime;
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                txtFldSimTime.setValue(frameEndTime, Time.SECOND);
+            }
+        });
+    }
+    
+    @Override
+    public void displayStatistics() {       
+        StatisticOld statistic = controller.getStatistic(singleType, InstantaneousSpeed.class);
+        statistic.prepareInstCalculations(currentFrame);
+        if (statistic instanceof SingleAverageStatisticOld)
+            ((SingleAverageStatisticOld) statistic).updateHistory();
+
+        plotPanel.setPlotInfo(statistic, currentPlotType, !chkBoxCumulative.isSelected());
+        plotPanel.repaint();
+
+        List<StatisticCalculation> calculations = statistic.getPreferredCalcOrder();
+        StatisticCalculation calculationToDisplay = calculations.get(0);
+        double value;
+        if (chkBoxCumulative.isSelected())
+            value = statistic.getCalculation(calculationToDisplay);
+        else
+            value = statistic.getInstCalculation(calculationToDisplay);
+        setReadout(statistic, calculationToDisplay, value);
+
+        StatisticReadoutSingle currentReadout = singleReadouts.get(statistic.getClass());
+
+        if (currentReadout != null)
+            currentReadout.setValueToolTipText("Prediction: " + ErrorHandler.format(statistic.getCalculation(calculations.get(1)), 5));
+
+        StatisticReadoutSingle.alignTextBoxes(pnlStats.getWidth() - 10, singleReadouts.values());
+        validate();
+    }
+    
+    private void setReadout(StatisticOld statistic, StatisticCalculation calculation, double value) {
+        StatisticReadoutSingle currentReadout = singleReadouts.get(statistic.getClass());
+
+        if (currentReadout != null) {
+            if (value < 0.01 || value >= 10000) {
+                currentReadout.setValue(ErrorHandler.format(value, 3));
+            } else {
+                currentReadout.setValue(ErrorHandler.format(value, 5));
+            }
+        }
+    }
+    
+    public IdealGasGraphSimSettings getSimSettingsView() {
+        return simSettingsView;
+    }
+
+    @Override
+    public void setNextFrameToDisplay(FrameInfo currentFrame) {
+        this.currentFrame = currentFrame;
+        glPanel.setNextFrameToDisplay(currentFrame);
+    }
+
+    @Override
+    public void setPaused(boolean paused) {
+    }
+
+    @Override
+    public MainGuiController getController() {
+        return controller;
+    }
+}

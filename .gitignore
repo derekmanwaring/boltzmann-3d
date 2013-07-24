@@ -1,0 +1,10 @@
+# Temporary files
+*~
+\#*
+
+# Compiled files
+bin
+dist
+
+# Hints for ant targets
+.ant-targets-build.xml
